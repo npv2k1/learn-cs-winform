@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Cho phép restore/build target Windows trên macOS/Linux -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>
