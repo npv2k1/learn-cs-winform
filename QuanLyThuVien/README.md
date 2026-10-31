@@ -97,6 +97,33 @@ Quá hạn được suy ra từ `DueDate`, không lưu thành trạng thái riê
 | ReturnedDate | DateOnly? | Null là chưa trả |
 | FineAmount | decimal | Tiền phạt, mặc định 0 |
 
+## Cấu trúc code
+
+Luồng xử lý: View → Controller → Repository → SQL Server.
+
+| Thư mục | Vai trò |
+|---|---|
+| `Models/` | Class dữ liệu và `BusinessException` |
+| `Views/` | Các form, chỉ lo hiển thị và nhận thao tác |
+| `Controllers/` | Kiểm tra dữ liệu và quy tắc nghiệp vụ, không phụ thuộc WinForms |
+| `Repositories/` | SQL thuần có tham số, thao tác ghi chạy trong transaction |
+| `Data/` | Mở kết nối, đọc giá trị từ `SqlDataReader` |
+
+`Program.cs` khởi tạo các lớp và truyền vào nhau. Các form được dựng bằng code, không dùng Form Designer.
+
+Quy tắc nghiệp vụ:
+
+- Thời hạn mượn mặc định 14 ngày, phạt 2.000 đồng cho mỗi ngày trễ của mỗi cuốn (`LoanController`).
+- Thẻ bị khóa hoặc hết hạn thì không tạo được phiếu mượn.
+- Mượn sách giảm `AvailableCopies`, trả sách tăng lại. Trả hết sách thì phiếu chuyển sang `Returned`.
+- `BookAuthor` không có class riêng: quan hệ nằm trong `Book.AuthorIds`.
+
+## Chạy ứng dụng
+
+Tạo database như mục dưới, rồi chạy trên Windows: `dotnet run --project QuanLyThuVien`.
+
+Mặc định app kết nối `127.0.0.1,1433`. Nếu SQL Server ở máy khác, đặt biến môi trường `LIBRARY_DB_CONNECTION`.
+
 ## Tạo database
 
 Chạy ở thư mục gốc của repo, khi container `sqlserver` đang chạy:
