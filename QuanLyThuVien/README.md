@@ -120,7 +120,7 @@ Quy tắc nghiệp vụ:
 
 ## Chạy ứng dụng
 
-Bật SQL Server, rồi chạy trên Windows: `dotnet run --project QuanLyThuVien`. Khi khởi động, app tự chạy [init.sql](init.sql) nên không cần tạo database bằng tay. Nếu không kết nối được, app báo lỗi rồi thoát.
+Bật SQL Server, rồi chạy trên Windows: `dotnet run --project QuanLyThuVien`. Khi khởi động, app tự chạy [init.sql](init.sql) nên không cần tạo database bằng tay. Lần đầu app cũng nạp dữ liệu mẫu; dữ liệu này chỉ được nạp khi chưa có thể loại, sách và độc giả nào. Nếu không kết nối được, app báo lỗi rồi thoát.
 
 Mặc định app kết nối `127.0.0.1,1433`. Nếu SQL Server ở máy khác, đặt biến môi trường `LIBRARY_DB_CONNECTION`.
 
@@ -129,7 +129,7 @@ Mặc định app kết nối `127.0.0.1,1433`. Nếu SQL Server ở máy khác,
 Chỉ cần khi muốn tạo database mà không mở app. Chạy ở thư mục gốc của repo, khi container `sqlserver` đang chạy:
 
 ```bash
-docker exec -i sqlserver bash -c '/opt/mssql-tools18/bin/sqlcmd -C -b -S localhost -U sa -P "$MSSQL_SA_PASSWORD"' < QuanLyThuVien/init.sql
+docker exec -i sqlserver bash -c '/opt/mssql-tools18/bin/sqlcmd -C -b -f 65001 -S localhost -U sa -P "$MSSQL_SA_PASSWORD"' < QuanLyThuVien/init.sql
 ```
 
 Script chạy lại nhiều lần được: database và bảng đã tồn tại thì bỏ qua.
