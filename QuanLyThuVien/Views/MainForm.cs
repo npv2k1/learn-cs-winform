@@ -2,8 +2,11 @@ using QuanLyThuVien.Controllers;
 
 namespace QuanLyThuVien.Views;
 
+/// <summary>Cửa sổ chính, mở các màn hình chức năng từ menu.</summary>
 public class MainForm : Form
 {
+    /// <summary>Tạo cửa sổ chính và menu.</summary>
+    /// <param name="controllers">Các controller của ứng dụng.</param>
     public MainForm(AppControllers controllers)
     {
         Text = "Quản lý thư viện";
@@ -26,6 +29,10 @@ public class MainForm : Form
         Controls.Add(menu);
     }
 
+    /// <summary>Tạo mục menu mở một form dạng hộp thoại.</summary>
+    /// <param name="text">Nội dung mục menu.</param>
+    /// <param name="createForm">Hàm tạo form cần mở.</param>
+    /// <returns>Mục menu đã gắn sự kiện.</returns>
     private ToolStripMenuItem CreateMenuItem(string text, Func<Form> createForm)
     {
         var item = new ToolStripMenuItem(text);

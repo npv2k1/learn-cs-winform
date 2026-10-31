@@ -3,6 +3,7 @@ using QuanLyThuVien.Models;
 
 namespace QuanLyThuVien.Views;
 
+/// <summary>Màn hình quản lý sách.</summary>
 public class BookForm : CrudForm<Book>
 {
     private readonly BookController controller;
@@ -14,6 +15,8 @@ public class BookForm : CrudForm<Book>
     private readonly NumericUpDown totalCopiesInput = new() { Minimum = 0, Maximum = 100000 };
     private readonly CheckedListBox authorsInput = new() { Height = 130, CheckOnClick = true };
 
+    /// <summary>Tạo màn hình quản lý sách.</summary>
+    /// <param name="controller">Controller sách.</param>
     public BookForm(BookController controller) : base(controller, "Sách")
     {
         this.controller = controller;
@@ -34,6 +37,7 @@ public class BookForm : CrudForm<Book>
         AddField("Tác giả", authorsInput);
     }
 
+    /// <inheritdoc/>
     protected override void LoadLookups()
     {
         categoryInput.DisplayMember = nameof(Category.Name);
@@ -50,6 +54,7 @@ public class BookForm : CrudForm<Book>
         authorsInput.Items.AddRange(controller.GetAuthors().ToArray<object>());
     }
 
+    /// <inheritdoc/>
     protected override void ShowItem(Book? item)
     {
         titleInput.Text = item?.Title;
@@ -68,6 +73,7 @@ public class BookForm : CrudForm<Book>
         }
     }
 
+    /// <inheritdoc/>
     protected override Book ReadItem() => new()
     {
         Title = titleInput.Text.Trim(),

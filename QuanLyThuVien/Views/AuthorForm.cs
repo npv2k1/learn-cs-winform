@@ -3,12 +3,15 @@ using QuanLyThuVien.Models;
 
 namespace QuanLyThuVien.Views;
 
+/// <summary>Màn hình quản lý tác giả.</summary>
 public class AuthorForm : CrudForm<Author>
 {
     private readonly TextBox fullNameInput = new();
     private readonly NumericUpDown birthYearInput = Ui.CreateYearInput();
     private readonly TextBox biographyInput = new() { Multiline = true, Height = 120 };
 
+    /// <summary>Tạo màn hình quản lý tác giả.</summary>
+    /// <param name="controller">Controller tác giả.</param>
     public AuthorForm(AuthorController controller) : base(controller, "Tác giả")
     {
         Grid.AddColumn(nameof(Author.FullName), "Họ tên");
@@ -19,6 +22,7 @@ public class AuthorForm : CrudForm<Author>
         AddField("Tiểu sử", biographyInput);
     }
 
+    /// <inheritdoc/>
     protected override void ShowItem(Author? item)
     {
         fullNameInput.Text = item?.FullName;
@@ -26,6 +30,7 @@ public class AuthorForm : CrudForm<Author>
         biographyInput.Text = item?.Biography;
     }
 
+    /// <inheritdoc/>
     protected override Author ReadItem() => new()
     {
         FullName = fullNameInput.Text.Trim(),

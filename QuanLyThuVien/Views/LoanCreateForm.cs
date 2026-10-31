@@ -3,6 +3,7 @@ using QuanLyThuVien.Models;
 
 namespace QuanLyThuVien.Views;
 
+/// <summary>Hộp thoại tạo phiếu mượn. Trả về <see cref="DialogResult.OK"/> khi tạo thành công.</summary>
 public class LoanCreateForm : Form
 {
     private readonly LoanController controller;
@@ -10,6 +11,8 @@ public class LoanCreateForm : Form
     private readonly DateTimePicker dueDateInput = new() { Format = DateTimePickerFormat.Short, Dock = DockStyle.Fill };
     private readonly CheckedListBox booksInput = new() { CheckOnClick = true, Dock = DockStyle.Fill };
 
+    /// <summary>Tạo hộp thoại tạo phiếu mượn.</summary>
+    /// <param name="controller">Controller mượn trả.</param>
     public LoanCreateForm(LoanController controller)
     {
         this.controller = controller;
@@ -46,12 +49,15 @@ public class LoanCreateForm : Form
         Controls.Add(layout);
     }
 
+    /// <summary>Nạp danh sách độc giả và sách khi hộp thoại mở.</summary>
+    /// <param name="e">Dữ liệu sự kiện.</param>
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
         Ui.Run(this, LoadLookups);
     }
 
+    /// <summary>Nạp dữ liệu cho ô chọn độc giả và danh sách sách còn bản.</summary>
     private void LoadLookups()
     {
         memberInput.DisplayMember = nameof(Member.FullName);
@@ -61,6 +67,7 @@ public class LoanCreateForm : Form
         booksInput.Items.AddRange(controller.GetAvailableBooks().ToArray<object>());
     }
 
+    /// <summary>Tạo phiếu từ dữ liệu đã chọn rồi đóng hộp thoại.</summary>
     private void Save()
     {
         var bookIds = booksInput.CheckedItems.Cast<Book>().Select(book => book.Id).ToList();

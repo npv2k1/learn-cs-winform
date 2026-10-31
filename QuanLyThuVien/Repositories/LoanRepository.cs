@@ -4,9 +4,12 @@ using QuanLyThuVien.Models;
 
 namespace QuanLyThuVien.Repositories;
 
+/// <summary>Truy cập các bảng <c>dbo.Loans</c> và <c>dbo.LoanItems</c>, đồng thời giữ <see cref="Book.AvailableCopies"/> khớp với việc mượn trả.</summary>
+/// <param name="connectionFactory">Factory dùng để mở kết nối tới database.</param>
 public class LoanRepository(SqlConnectionFactory connectionFactory)
     : RepositoryBase(connectionFactory), ILoanRepository
 {
+    /// <inheritdoc/>
     public List<Loan> GetAll(string? keyword = null) => Query(
         """
         SELECT l.Id, l.MemberId, l.LoanDate, l.DueDate, l.Status, m.FullName AS MemberName
@@ -18,6 +21,7 @@ public class LoanRepository(SqlConnectionFactory connectionFactory)
         MapLoan,
         KeywordParam(keyword));
 
+    /// <inheritdoc/>
     public List<LoanItem> GetItems(int loanId) => Query(
         """
         SELECT li.Id, li.LoanId, li.BookId, li.ReturnedDate, li.FineAmount, b.Title AS BookTitle
@@ -29,6 +33,7 @@ public class LoanRepository(SqlConnectionFactory connectionFactory)
         MapItem,
         Param("@LoanId", loanId));
 
+    /// <inheritdoc/>
     public void Create(Loan loan, IReadOnlyCollection<int> bookIds) => InTransaction(transaction =>
     {
         var loanId = InsertAndGetId(
@@ -61,6 +66,7 @@ public class LoanRepository(SqlConnectionFactory connectionFactory)
         }
     });
 
+    /// <inheritdoc/>
     public void ReturnItem(LoanItem item, DateOnly returnedDate, decimal fineAmount) => InTransaction(transaction =>
     {
         var updatedRows = Execute(
@@ -94,6 +100,9 @@ public class LoanRepository(SqlConnectionFactory connectionFactory)
             Param("@Status", LoanStatus.Returned.ToString()));
     });
 
+    /// <summary>Chuyển dòng hiện tại của reader thành <see cref="Loan"/>.</summary>
+    /// <param name="reader">Reader đang đứng ở dòng cần đọc.</param>
+    /// <returns>Đối tượng được tạo từ dòng hiện tại.</returns>
     private static Loan MapLoan(SqlDataReader reader) => new()
     {
         Id = reader.ReadInt("Id"),
@@ -104,6 +113,9 @@ public class LoanRepository(SqlConnectionFactory connectionFactory)
         MemberName = reader.ReadString("MemberName")
     };
 
+    /// <summary>Chuyển dòng hiện tại của reader thành <see cref="LoanItem"/>.</summary>
+    /// <param name="reader">Reader đang đứng ở dòng cần đọc.</param>
+    /// <returns>Đối tượng được tạo từ dòng hiện tại.</returns>
     private static LoanItem MapItem(SqlDataReader reader) => new()
     {
         Id = reader.ReadInt("Id"),

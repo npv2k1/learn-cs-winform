@@ -4,9 +4,12 @@ using QuanLyThuVien.Models;
 
 namespace QuanLyThuVien.Repositories;
 
+/// <summary>Truy cập bảng <c>dbo.Books</c> và quan hệ tác giả trong <c>dbo.BookAuthors</c>.</summary>
+/// <param name="connectionFactory">Factory dùng để mở kết nối tới database.</param>
 public class BookRepository(SqlConnectionFactory connectionFactory)
     : RepositoryBase(connectionFactory), IRepository<Book>
 {
+    /// <inheritdoc/>
     public List<Book> GetAll(string? keyword = null) => Query(
         """
         SELECT b.Id, b.Isbn, b.Title, b.CategoryId, b.PublisherId, b.PublishedYear,
@@ -29,6 +32,9 @@ public class BookRepository(SqlConnectionFactory connectionFactory)
         Map,
         KeywordParam(keyword));
 
+    /// <summary>Thêm sách cùng danh sách tác giả. Số bản còn lại ban đầu bằng tổng số bản.</summary>
+    /// <param name="item">Sách cần thêm.</param>
+    /// <exception cref="BusinessException">Dữ liệu bị trùng hoặc vi phạm ràng buộc.</exception>
     public void Add(Book item) => InTransaction(transaction =>
     {
         var bookId = InsertAndGetId(
@@ -43,6 +49,13 @@ public class BookRepository(SqlConnectionFactory connectionFactory)
         InsertAuthors(transaction, bookId, item.AuthorIds);
     });
 
+    /// <summary>Cập nhật sách và thay toàn bộ danh sách tác giả.</summary>
+    /// <remarks>
+    /// Số bản còn lại được điều chỉnh theo chênh lệch tổng số bản,
+    /// nên số bản đang cho mượn không thay đổi.
+    /// </remarks>
+    /// <param name="item">Sách chứa dữ liệu mới.</param>
+    /// <exception cref="BusinessException">Tổng số bản nhỏ hơn số bản đang cho mượn, hoặc dữ liệu vi phạm ràng buộc.</exception>
     public void Update(Book item) => InTransaction(transaction =>
     {
         // Số bản còn lại thay đổi theo tổng số bản, số bản đang cho mượn giữ nguyên
@@ -65,10 +78,15 @@ public class BookRepository(SqlConnectionFactory connectionFactory)
         InsertAuthors(transaction, item.Id, item.AuthorIds);
     });
 
+    /// <inheritdoc/>
     public void Delete(int id) => Execute(
         "DELETE FROM dbo.Books WHERE Id = @Id",
         Param("@Id", id));
 
+    /// <summary>Thêm các dòng liên kết sách với tác giả.</summary>
+    /// <param name="transaction">Transaction đang mở.</param>
+    /// <param name="bookId">Khóa chính của sách.</param>
+    /// <param name="authorIds">Khóa chính của các tác giả.</param>
     private static void InsertAuthors(SqlTransaction transaction, int bookId, IEnumerable<int> authorIds)
     {
         foreach (var authorId in authorIds)
@@ -81,6 +99,9 @@ public class BookRepository(SqlConnectionFactory connectionFactory)
         }
     }
 
+    /// <summary>Tạo các tham số chung của câu lệnh thêm và sửa <see cref="Book"/>.</summary>
+    /// <param name="item">Bản ghi nguồn.</param>
+    /// <returns>Danh sách tham số, chưa gồm <c>@Id</c>.</returns>
     private static SqlParameter[] ToParams(Book item) =>
     [
         Param("@Isbn", item.Isbn),
@@ -91,6 +112,9 @@ public class BookRepository(SqlConnectionFactory connectionFactory)
         Param("@TotalCopies", item.TotalCopies)
     ];
 
+    /// <summary>Chuyển dòng hiện tại của reader thành <see cref="Book"/>.</summary>
+    /// <param name="reader">Reader đang đứng ở dòng cần đọc.</param>
+    /// <returns>Đối tượng được tạo từ dòng hiện tại.</returns>
     private static Book Map(SqlDataReader reader) => new()
     {
         Id = reader.ReadInt("Id"),
@@ -107,6 +131,9 @@ public class BookRepository(SqlConnectionFactory connectionFactory)
         AuthorIds = ParseIds(reader.ReadNullableString("AuthorIds"))
     };
 
+    /// <summary>Tách chuỗi khóa chính nối bằng dấu phẩy từ <c>STRING_AGG</c>.</summary>
+    /// <param name="ids">Chuỗi khóa chính, có thể null.</param>
+    /// <returns>Danh sách khóa chính, rỗng nếu đầu vào là null.</returns>
     private static List<int> ParseIds(string? ids) =>
         ids is null ? [] : ids.Split(',').Select(int.Parse).ToList();
 }

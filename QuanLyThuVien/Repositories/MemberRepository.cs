@@ -4,9 +4,12 @@ using QuanLyThuVien.Models;
 
 namespace QuanLyThuVien.Repositories;
 
+/// <summary>Truy cập bảng <c>dbo.Members</c> bằng SQL thuần.</summary>
+/// <param name="connectionFactory">Factory dùng để mở kết nối tới database.</param>
 public class MemberRepository(SqlConnectionFactory connectionFactory)
     : RepositoryBase(connectionFactory), IRepository<Member>
 {
+    /// <inheritdoc/>
     public List<Member> GetAll(string? keyword = null) => Query(
         """
         SELECT Id, MemberCode, FullName, Phone, Email, Address, JoinedDate, ExpiryDate, IsActive
@@ -17,6 +20,7 @@ public class MemberRepository(SqlConnectionFactory connectionFactory)
         Map,
         KeywordParam(keyword));
 
+    /// <inheritdoc/>
     public void Add(Member item) => Execute(
         """
         INSERT INTO dbo.Members (MemberCode, FullName, Phone, Email, Address, JoinedDate, ExpiryDate, IsActive)
@@ -24,6 +28,7 @@ public class MemberRepository(SqlConnectionFactory connectionFactory)
         """,
         ToParams(item));
 
+    /// <inheritdoc/>
     public void Update(Member item) => Execute(
         """
         UPDATE dbo.Members
@@ -33,10 +38,14 @@ public class MemberRepository(SqlConnectionFactory connectionFactory)
         """,
         [Param("@Id", item.Id), .. ToParams(item)]);
 
+    /// <inheritdoc/>
     public void Delete(int id) => Execute(
         "DELETE FROM dbo.Members WHERE Id = @Id",
         Param("@Id", id));
 
+    /// <summary>Tạo các tham số chung của câu lệnh thêm và sửa <see cref="Member"/>.</summary>
+    /// <param name="item">Bản ghi nguồn.</param>
+    /// <returns>Danh sách tham số, chưa gồm <c>@Id</c>.</returns>
     private static SqlParameter[] ToParams(Member item) =>
     [
         Param("@MemberCode", item.MemberCode),
@@ -49,6 +58,9 @@ public class MemberRepository(SqlConnectionFactory connectionFactory)
         Param("@IsActive", item.IsActive)
     ];
 
+    /// <summary>Chuyển dòng hiện tại của reader thành <see cref="Member"/>.</summary>
+    /// <param name="reader">Reader đang đứng ở dòng cần đọc.</param>
+    /// <returns>Đối tượng được tạo từ dòng hiện tại.</returns>
     private static Member Map(SqlDataReader reader) => new()
     {
         Id = reader.ReadInt("Id"),

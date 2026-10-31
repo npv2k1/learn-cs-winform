@@ -3,6 +3,7 @@ using QuanLyThuVien.Models;
 
 namespace QuanLyThuVien.Views;
 
+/// <summary>Màn hình mượn trả: danh sách phiếu ở trên, sách của phiếu đang chọn ở dưới.</summary>
 public class LoanForm : Form
 {
     private readonly LoanController controller;
@@ -10,6 +11,8 @@ public class LoanForm : Form
     private readonly DataGridView itemsGrid = Ui.CreateGrid();
     private readonly TextBox searchBox = new() { Dock = DockStyle.Fill };
 
+    /// <summary>Tạo màn hình mượn trả.</summary>
+    /// <param name="controller">Controller mượn trả.</param>
     public LoanForm(LoanController controller)
     {
         this.controller = controller;
@@ -44,18 +47,24 @@ public class LoanForm : Form
         loansGrid.SelectionChanged += (_, _) => Ui.Run(this, ReloadItems);
     }
 
+    /// <summary>Phiếu mượn đang chọn, nếu có.</summary>
     private Loan? SelectedLoan =>
         loansGrid.SelectedRows.Count > 0 ? loansGrid.SelectedRows[0].DataBoundItem as Loan : null;
 
+    /// <summary>Cuốn sách đang chọn trong phiếu, nếu có.</summary>
     private LoanItem? SelectedItem =>
         itemsGrid.SelectedRows.Count > 0 ? itemsGrid.SelectedRows[0].DataBoundItem as LoanItem : null;
 
+    /// <summary>Nạp danh sách phiếu mượn khi form mở.</summary>
+    /// <param name="e">Dữ liệu sự kiện.</param>
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
         Ui.Run(this, ReloadLoans);
     }
 
+    /// <summary>Dựng thanh tìm kiếm và nút tạo phiếu.</summary>
+    /// <returns>Panel chứa thanh công cụ.</returns>
     private Panel CreateToolbar()
     {
         var searchButton = new Button { Text = "Tìm", Dock = DockStyle.Right, Width = 80 };
@@ -71,6 +80,8 @@ public class LoanForm : Form
         return panel;
     }
 
+    /// <summary>Dựng thanh công cụ của danh sách sách trong phiếu.</summary>
+    /// <returns>Panel chứa thanh công cụ.</returns>
     private Panel CreateItemsToolbar()
     {
         var returnButton = new Button { Text = "Trả sách đã chọn", Dock = DockStyle.Right, Width = 130 };
@@ -82,6 +93,7 @@ public class LoanForm : Form
         return panel;
     }
 
+    /// <summary>Mở hộp thoại tạo phiếu và tải lại danh sách nếu tạo thành công.</summary>
     private void CreateLoan()
     {
         using var form = new LoanCreateForm(controller);
@@ -89,6 +101,8 @@ public class LoanForm : Form
             Ui.Run(this, ReloadLoans);
     }
 
+    /// <summary>Trả cuốn sách đang chọn và báo tiền phạt nếu có.</summary>
+    /// <exception cref="BusinessException">Chưa chọn phiếu hoặc sách, hoặc sách đã được trả.</exception>
     private void ReturnSelectedItem()
     {
         var loan = SelectedLoan ?? throw new BusinessException("Vui lòng chọn phiếu mượn.");
@@ -101,12 +115,14 @@ public class LoanForm : Form
             MessageBox.Show(this, $"Trả sách quá hạn. Tiền phạt: {fineAmount:N0} đồng.", Text);
     }
 
+    /// <summary>Tải lại danh sách phiếu theo từ khóa hiện tại.</summary>
     private void ReloadLoans()
     {
         loansGrid.DataSource = controller.GetLoans(searchBox.TextOrNull());
         ReloadItems();
     }
 
+    /// <summary>Tải lại các cuốn sách của phiếu đang chọn.</summary>
     private void ReloadItems() =>
         itemsGrid.DataSource = SelectedLoan is { } loan ? controller.GetItems(loan.Id) : null;
 }

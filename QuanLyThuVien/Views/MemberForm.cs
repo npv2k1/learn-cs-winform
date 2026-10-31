@@ -3,6 +3,7 @@ using QuanLyThuVien.Models;
 
 namespace QuanLyThuVien.Views;
 
+/// <summary>Màn hình quản lý độc giả.</summary>
 public class MemberForm : CrudForm<Member>
 {
     private readonly TextBox memberCodeInput = new();
@@ -14,6 +15,8 @@ public class MemberForm : CrudForm<Member>
     private readonly DateTimePicker expiryDateInput = new() { Format = DateTimePickerFormat.Short };
     private readonly CheckBox isActiveInput = new() { Text = "Đang hoạt động" };
 
+    /// <summary>Tạo màn hình quản lý độc giả.</summary>
+    /// <param name="controller">Controller độc giả.</param>
     public MemberForm(MemberController controller) : base(controller, "Độc giả")
     {
         Grid.AddColumn(nameof(Member.MemberCode), "Mã thẻ");
@@ -31,6 +34,7 @@ public class MemberForm : CrudForm<Member>
         AddField("Trạng thái", isActiveInput);
     }
 
+    /// <inheritdoc/>
     protected override void ShowItem(Member? item)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
@@ -45,6 +49,7 @@ public class MemberForm : CrudForm<Member>
         isActiveInput.Checked = item?.IsActive ?? true;
     }
 
+    /// <inheritdoc/>
     protected override Member ReadItem() => new()
     {
         MemberCode = memberCodeInput.Text.Trim(),
