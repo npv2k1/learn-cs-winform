@@ -64,6 +64,7 @@ static class Program
         var books = new BookRepository(connectionFactory);
         var members = new MemberRepository(connectionFactory);
         var loans = new LoanRepository(connectionFactory);
+        var statistics = new StatisticsRepository(connectionFactory);
 
         return new AppControllers(
             new CategoryController(categories),
@@ -71,6 +72,7 @@ static class Program
             new PublisherController(publishers),
             new BookController(books, categories, publishers, authors),
             new MemberController(members),
-            new LoanController(loans, members, books));
+            new LoanController(loans, members, books),
+            new StatisticsController(statistics));
     }
 }

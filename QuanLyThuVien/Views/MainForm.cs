@@ -2,7 +2,7 @@ using QuanLyThuVien.Controllers;
 
 namespace QuanLyThuVien.Views;
 
-/// <summary>Cửa sổ chính, mở các màn hình chức năng từ menu.</summary>
+/// <summary>Cửa sổ chính: menu chức năng, số liệu thống kê và danh sách sách quá hạn.</summary>
 public partial class MainForm : Form
 {
     private readonly AppControllers controllers;
@@ -13,7 +13,11 @@ public partial class MainForm : Form
     {
         this.controllers = controllers;
         InitializeComponent();
+        dgvOverdue.AutoGenerateColumns = false;
     }
+
+    /// <summary>Tải số liệu khi cửa sổ mở.</summary>
+    private void MainForm_Load(object sender, EventArgs e) => Ui.Run(this, ReloadStatistics);
 
     /// <summary>Mở màn hình sách.</summary>
     private void mnuBooks_Click(object sender, EventArgs e) => Open(new BookForm(controllers.Books));
@@ -33,11 +37,28 @@ public partial class MainForm : Form
     /// <summary>Mở màn hình mượn trả.</summary>
     private void mnuLoans_Click(object sender, EventArgs e) => Open(new LoanForm(controllers.Loans));
 
-    /// <summary>Mở một form dạng hộp thoại và giải phóng khi đóng.</summary>
+    /// <summary>Mở một form dạng hộp thoại, giải phóng khi đóng rồi cập nhật lại số liệu.</summary>
     /// <param name="form">Form cần mở.</param>
     private void Open(Form form)
     {
         using (form)
             form.ShowDialog(this);
+
+        Ui.Run(this, ReloadStatistics);
+    }
+
+    /// <summary>Tải lại các số liệu tổng quan và danh sách sách quá hạn.</summary>
+    private void ReloadStatistics()
+    {
+        var statistics = controllers.Statistics.GetStatistics();
+
+        lblTotalTitles.Text = statistics.TotalTitles.ToString("N0");
+        lblTotalCopies.Text = statistics.TotalCopies.ToString("N0");
+        lblCopiesOnLoan.Text = statistics.CopiesOnLoan.ToString("N0");
+        lblActiveMembers.Text = statistics.ActiveMembers.ToString("N0");
+        lblOpenLoans.Text = statistics.OpenLoans.ToString("N0");
+        lblOverdueLoans.Text = statistics.OverdueLoans.ToString("N0");
+
+        dgvOverdue.DataSource = controllers.Statistics.GetOverdueItems();
     }
 }

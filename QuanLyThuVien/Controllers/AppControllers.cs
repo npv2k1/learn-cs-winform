@@ -7,10 +7,12 @@ namespace QuanLyThuVien.Controllers;
 /// <param name="Books">Controller sách.</param>
 /// <param name="Members">Controller độc giả.</param>
 /// <param name="Loans">Controller mượn trả.</param>
+/// <param name="Statistics">Controller thống kê.</param>
 public record AppControllers(
     CategoryController Categories,
     AuthorController Authors,
     PublisherController Publishers,
     BookController Books,
     MemberController Members,
-    LoanController Loans);
+    LoanController Loans,
+    StatisticsController Statistics);
