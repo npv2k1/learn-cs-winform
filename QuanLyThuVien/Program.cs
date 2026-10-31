@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using QuanLyThuVien.Controllers;
 using QuanLyThuVien.Data;
 using QuanLyThuVien.Repositories;
@@ -21,14 +22,40 @@ static class Program
         // To customize application configuration such as set high DPI settings or default font,
         // see https://aka.ms/applicationconfiguration.
         ApplicationConfiguration.Initialize();
-        Application.Run(new MainForm(CreateControllers()));
+
+        var connectionString = Environment.GetEnvironmentVariable(ConnectionStringVariable) ?? DefaultConnectionString;
+        if (!TryInitializeDatabase(connectionString))
+            return;
+
+        Application.Run(new MainForm(CreateControllers(connectionString)));
     }
 
-    /// <summary>Tạo repository và controller từ connection string hiện tại.</summary>
-    /// <returns>Các controller đã sẵn sàng sử dụng.</returns>
-    private static AppControllers CreateControllers()
+    /// <summary>Khởi tạo database, báo lỗi lên màn hình nếu không thành công.</summary>
+    /// <param name="connectionString">Connection string của ứng dụng.</param>
+    /// <returns><see langword="true"/> nếu database đã sẵn sàng để sử dụng.</returns>
+    private static bool TryInitializeDatabase(string connectionString)
     {
-        var connectionString = Environment.GetEnvironmentVariable(ConnectionStringVariable) ?? DefaultConnectionString;
+        try
+        {
+            new DatabaseInitializer(connectionString).Run();
+            return true;
+        }
+        catch (SqlException ex)
+        {
+            MessageBox.Show(
+                $"Không khởi tạo được database. Hãy kiểm tra SQL Server đã chạy chưa.\n\n{ex.Message}",
+                "Lỗi",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+            return false;
+        }
+    }
+
+    /// <summary>Tạo repository và controller từ connection string đã cho.</summary>
+    /// <param name="connectionString">Connection string của ứng dụng.</param>
+    /// <returns>Các controller đã sẵn sàng sử dụng.</returns>
+    private static AppControllers CreateControllers(string connectionString)
+    {
         var connectionFactory = new SqlConnectionFactory(connectionString);
 
         var categories = new CategoryRepository(connectionFactory);

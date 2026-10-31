@@ -120,13 +120,13 @@ Quy tắc nghiệp vụ:
 
 ## Chạy ứng dụng
 
-Tạo database như mục dưới, rồi chạy trên Windows: `dotnet run --project QuanLyThuVien`.
+Bật SQL Server, rồi chạy trên Windows: `dotnet run --project QuanLyThuVien`. Khi khởi động, app tự chạy [init.sql](init.sql) nên không cần tạo database bằng tay. Nếu không kết nối được, app báo lỗi rồi thoát.
 
 Mặc định app kết nối `127.0.0.1,1433`. Nếu SQL Server ở máy khác, đặt biến môi trường `LIBRARY_DB_CONNECTION`.
 
-## Tạo database
+## Tạo database bằng tay
 
-Chạy ở thư mục gốc của repo, khi container `sqlserver` đang chạy:
+Chỉ cần khi muốn tạo database mà không mở app. Chạy ở thư mục gốc của repo, khi container `sqlserver` đang chạy:
 
 ```bash
 docker exec -i sqlserver bash -c '/opt/mssql-tools18/bin/sqlcmd -C -b -S localhost -U sa -P "$MSSQL_SA_PASSWORD"' < QuanLyThuVien/init.sql
