@@ -4,38 +4,93 @@ using QuanLyThuVien.Models;
 namespace QuanLyThuVien.Views;
 
 /// <summary>Màn hình quản lý nhà xuất bản.</summary>
-public class PublisherForm : CrudForm<Publisher>
+public partial class PublisherForm : Form
 {
-    private readonly TextBox nameInput = new();
-    private readonly TextBox addressInput = new();
-    private readonly TextBox phoneInput = new();
+    private readonly PublisherController controller;
+
+    /// <summary>Bản ghi đang chọn, <see langword="null"/> khi đang nhập mới.</summary>
+    private Publisher? current;
 
     /// <summary>Tạo màn hình quản lý nhà xuất bản.</summary>
     /// <param name="controller">Controller nhà xuất bản.</param>
-    public PublisherForm(PublisherController controller) : base(controller, "Nhà xuất bản")
+    public PublisherForm(PublisherController controller)
     {
-        Grid.AddColumn(nameof(Publisher.Name), "Tên nhà xuất bản");
-        Grid.AddColumn(nameof(Publisher.Address), "Địa chỉ");
-        Grid.AddColumn(nameof(Publisher.Phone), "Điện thoại");
-
-        AddField("Tên", nameInput);
-        AddField("Địa chỉ", addressInput);
-        AddField("Điện thoại", phoneInput);
+        this.controller = controller;
+        InitializeComponent();
+        dgvPublishers.AutoGenerateColumns = false;
     }
 
-    /// <inheritdoc/>
-    protected override void ShowItem(Publisher? item)
+    /// <summary>Tải dữ liệu khi form mở.</summary>
+    private void PublisherForm_Load(object sender, EventArgs e) => Ui.Run(this, Reload);
+
+    /// <summary>Tìm kiếm theo từ khóa đang nhập.</summary>
+    private void btnSearch_Click(object sender, EventArgs e) => Ui.Run(this, Reload);
+
+    /// <summary>Hiển thị dòng vừa chọn lên các ô nhập.</summary>
+    private void dgvPublishers_SelectionChanged(object sender, EventArgs e) => ShowCurrent();
+
+    /// <summary>Bỏ chọn dòng hiện tại để nhập bản ghi mới.</summary>
+    private void btnNew_Click(object sender, EventArgs e) => dgvPublishers.ClearSelection();
+
+    /// <summary>Lưu dữ liệu đang nhập.</summary>
+    private void btnSave_Click(object sender, EventArgs e) => Ui.Run(this, Save);
+
+    /// <summary>Xóa dòng đang chọn.</summary>
+    private void btnDelete_Click(object sender, EventArgs e) => Ui.Run(this, Delete);
+
+    /// <summary>Tải lại danh sách theo từ khóa hiện tại.</summary>
+    private void Reload()
     {
-        nameInput.Text = item?.Name;
-        addressInput.Text = item?.Address;
-        phoneInput.Text = item?.Phone;
+        dgvPublishers.DataSource = controller.GetAll(txtSearch.TextOrNull());
+        ShowCurrent();
     }
 
-    /// <inheritdoc/>
-    protected override Publisher ReadItem() => new()
+    /// <summary>Cập nhật bản ghi đang chọn và hiển thị lên ô nhập.</summary>
+    private void ShowCurrent()
     {
-        Name = nameInput.Text.Trim(),
-        Address = addressInput.TextOrNull(),
-        Phone = phoneInput.TextOrNull()
+        current = dgvPublishers.SelectedRows.Count > 0 ? dgvPublishers.SelectedRows[0].DataBoundItem as Publisher : null;
+        ShowItem(current);
+    }
+
+    /// <summary>Lưu dữ liệu đang nhập rồi tải lại danh sách.</summary>
+    private void Save()
+    {
+        var item = ReadItem();
+        item.Id = current?.Id ?? 0;
+        controller.Save(item);
+        Reload();
+    }
+
+    /// <summary>Xóa bản ghi đang chọn sau khi người dùng xác nhận.</summary>
+    /// <exception cref="BusinessException">Chưa chọn bản ghi.</exception>
+    private void Delete()
+    {
+        if (current is null)
+            throw new BusinessException("Vui lòng chọn dòng cần xóa.");
+
+        var answer = MessageBox.Show(this, "Bạn có chắc muốn xóa dòng này?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        if (answer != DialogResult.Yes)
+            return;
+
+        controller.Delete(current);
+        Reload();
+    }
+
+    /// <summary>Đưa dữ liệu của bản ghi lên các ô nhập.</summary>
+    /// <param name="item">Bản ghi cần hiển thị; <see langword="null"/> để xóa trắng và nhập mới.</param>
+    private void ShowItem(Publisher? item)
+    {
+        txtName.Text = item?.Name;
+        txtAddress.Text = item?.Address;
+        txtPhone.Text = item?.Phone;
+    }
+
+    /// <summary>Đọc các ô nhập thành model.</summary>
+    /// <returns>Model chứa dữ liệu người dùng nhập.</returns>
+    private Publisher ReadItem() => new()
+    {
+        Name = txtName.Text.Trim(),
+        Address = txtAddress.TextOrNull(),
+        Phone = txtPhone.TextOrNull()
     };
 }

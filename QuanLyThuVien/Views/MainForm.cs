@@ -3,44 +3,41 @@ using QuanLyThuVien.Controllers;
 namespace QuanLyThuVien.Views;
 
 /// <summary>Cửa sổ chính, mở các màn hình chức năng từ menu.</summary>
-public class MainForm : Form
+public partial class MainForm : Form
 {
-    /// <summary>Tạo cửa sổ chính và menu.</summary>
+    private readonly AppControllers controllers;
+
+    /// <summary>Tạo cửa sổ chính.</summary>
     /// <param name="controllers">Các controller của ứng dụng.</param>
     public MainForm(AppControllers controllers)
     {
-        Text = "Quản lý thư viện";
-        Width = 800;
-        Height = 500;
-        StartPosition = FormStartPosition.CenterScreen;
-
-        var catalogMenu = new ToolStripMenuItem("Danh mục");
-        catalogMenu.DropDownItems.Add(CreateMenuItem("Sách", () => new BookForm(controllers.Books)));
-        catalogMenu.DropDownItems.Add(CreateMenuItem("Thể loại", () => new CategoryForm(controllers.Categories)));
-        catalogMenu.DropDownItems.Add(CreateMenuItem("Tác giả", () => new AuthorForm(controllers.Authors)));
-        catalogMenu.DropDownItems.Add(CreateMenuItem("Nhà xuất bản", () => new PublisherForm(controllers.Publishers)));
-
-        var menu = new MenuStrip();
-        menu.Items.Add(catalogMenu);
-        menu.Items.Add(CreateMenuItem("Độc giả", () => new MemberForm(controllers.Members)));
-        menu.Items.Add(CreateMenuItem("Mượn trả", () => new LoanForm(controllers.Loans)));
-
-        MainMenuStrip = menu;
-        Controls.Add(menu);
+        this.controllers = controllers;
+        InitializeComponent();
     }
 
-    /// <summary>Tạo mục menu mở một form dạng hộp thoại.</summary>
-    /// <param name="text">Nội dung mục menu.</param>
-    /// <param name="createForm">Hàm tạo form cần mở.</param>
-    /// <returns>Mục menu đã gắn sự kiện.</returns>
-    private ToolStripMenuItem CreateMenuItem(string text, Func<Form> createForm)
+    /// <summary>Mở màn hình sách.</summary>
+    private void mnuBooks_Click(object sender, EventArgs e) => Open(new BookForm(controllers.Books));
+
+    /// <summary>Mở màn hình thể loại.</summary>
+    private void mnuCategories_Click(object sender, EventArgs e) => Open(new CategoryForm(controllers.Categories));
+
+    /// <summary>Mở màn hình tác giả.</summary>
+    private void mnuAuthors_Click(object sender, EventArgs e) => Open(new AuthorForm(controllers.Authors));
+
+    /// <summary>Mở màn hình nhà xuất bản.</summary>
+    private void mnuPublishers_Click(object sender, EventArgs e) => Open(new PublisherForm(controllers.Publishers));
+
+    /// <summary>Mở màn hình độc giả.</summary>
+    private void mnuMembers_Click(object sender, EventArgs e) => Open(new MemberForm(controllers.Members));
+
+    /// <summary>Mở màn hình mượn trả.</summary>
+    private void mnuLoans_Click(object sender, EventArgs e) => Open(new LoanForm(controllers.Loans));
+
+    /// <summary>Mở một form dạng hộp thoại và giải phóng khi đóng.</summary>
+    /// <param name="form">Form cần mở.</param>
+    private void Open(Form form)
     {
-        var item = new ToolStripMenuItem(text);
-        item.Click += (_, _) =>
-        {
-            using var form = createForm();
+        using (form)
             form.ShowDialog(this);
-        };
-        return item;
     }
 }

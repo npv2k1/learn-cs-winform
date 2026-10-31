@@ -4,84 +4,132 @@ using QuanLyThuVien.Models;
 namespace QuanLyThuVien.Views;
 
 /// <summary>Màn hình quản lý sách.</summary>
-public class BookForm : CrudForm<Book>
+public partial class BookForm : Form
 {
     private readonly BookController controller;
-    private readonly TextBox isbnInput = new();
-    private readonly TextBox titleInput = new();
-    private readonly ComboBox categoryInput = new() { DropDownStyle = ComboBoxStyle.DropDownList };
-    private readonly ComboBox publisherInput = new() { DropDownStyle = ComboBoxStyle.DropDownList };
-    private readonly NumericUpDown publishedYearInput = Ui.CreateYearInput();
-    private readonly NumericUpDown totalCopiesInput = new() { Minimum = 0, Maximum = 100000 };
-    private readonly CheckedListBox authorsInput = new() { Height = 130, CheckOnClick = true };
+
+    /// <summary>Bản ghi đang chọn, <see langword="null"/> khi đang nhập mới.</summary>
+    private Book? current;
 
     /// <summary>Tạo màn hình quản lý sách.</summary>
     /// <param name="controller">Controller sách.</param>
-    public BookForm(BookController controller) : base(controller, "Sách")
+    public BookForm(BookController controller)
     {
         this.controller = controller;
-
-        Grid.AddColumn(nameof(Book.Title), "Tên sách");
-        Grid.AddColumn(nameof(Book.AuthorNames), "Tác giả");
-        Grid.AddColumn(nameof(Book.CategoryName), "Thể loại");
-        Grid.AddColumn(nameof(Book.PublisherName), "Nhà xuất bản");
-        Grid.AddColumn(nameof(Book.AvailableCopies), "Còn lại");
-        Grid.AddColumn(nameof(Book.TotalCopies), "Tổng số");
-
-        AddField("Tên sách", titleInput);
-        AddField("ISBN", isbnInput);
-        AddField("Thể loại", categoryInput);
-        AddField("Nhà xuất bản", publisherInput);
-        AddField("Năm xuất bản", publishedYearInput);
-        AddField("Tổng số bản", totalCopiesInput);
-        AddField("Tác giả", authorsInput);
+        InitializeComponent();
+        dgvBooks.AutoGenerateColumns = false;
     }
 
-    /// <inheritdoc/>
-    protected override void LoadLookups()
+    /// <summary>Tải dữ liệu khi form mở.</summary>
+    private void BookForm_Load(object sender, EventArgs e)
     {
-        categoryInput.DisplayMember = nameof(Category.Name);
-        categoryInput.ValueMember = nameof(Category.Id);
-        categoryInput.DataSource = controller.GetCategories();
+        Ui.Run(this, () =>
+        {
+            LoadLookups();
+            Reload();
+        });
+    }
+
+    /// <summary>Tìm kiếm theo từ khóa đang nhập.</summary>
+    private void btnSearch_Click(object sender, EventArgs e) => Ui.Run(this, Reload);
+
+    /// <summary>Hiển thị dòng vừa chọn lên các ô nhập.</summary>
+    private void dgvBooks_SelectionChanged(object sender, EventArgs e) => ShowCurrent();
+
+    /// <summary>Bỏ chọn dòng hiện tại để nhập bản ghi mới.</summary>
+    private void btnNew_Click(object sender, EventArgs e) => dgvBooks.ClearSelection();
+
+    /// <summary>Lưu dữ liệu đang nhập.</summary>
+    private void btnSave_Click(object sender, EventArgs e) => Ui.Run(this, Save);
+
+    /// <summary>Xóa dòng đang chọn.</summary>
+    private void btnDelete_Click(object sender, EventArgs e) => Ui.Run(this, Delete);
+
+    /// <summary>Nạp dữ liệu cho các ô chọn thể loại, nhà xuất bản và tác giả.</summary>
+    private void LoadLookups()
+    {
+        cboCategory.DisplayMember = nameof(Category.Name);
+        cboCategory.ValueMember = nameof(Category.Id);
+        cboCategory.DataSource = controller.GetCategories();
 
         // Dòng Id = 0 ứng với sách không có nhà xuất bản
-        publisherInput.DisplayMember = nameof(Publisher.Name);
-        publisherInput.ValueMember = nameof(Publisher.Id);
-        publisherInput.DataSource = controller.GetPublishers().Prepend(new Publisher { Name = "(Không có)" }).ToList();
+        cboPublisher.DisplayMember = nameof(Publisher.Name);
+        cboPublisher.ValueMember = nameof(Publisher.Id);
+        cboPublisher.DataSource = controller.GetPublishers().Prepend(new Publisher { Name = "(Không có)" }).ToList();
 
-        authorsInput.DisplayMember = nameof(Author.FullName);
-        authorsInput.Items.Clear();
-        authorsInput.Items.AddRange(controller.GetAuthors().ToArray<object>());
+        clbAuthors.DisplayMember = nameof(Author.FullName);
+        clbAuthors.Items.Clear();
+        clbAuthors.Items.AddRange(controller.GetAuthors().ToArray<object>());
     }
 
-    /// <inheritdoc/>
-    protected override void ShowItem(Book? item)
+    /// <summary>Tải lại danh sách theo từ khóa hiện tại.</summary>
+    private void Reload()
     {
-        titleInput.Text = item?.Title;
-        isbnInput.Text = item?.Isbn;
-        publishedYearInput.Value = item?.PublishedYear ?? 0;
-        totalCopiesInput.Value = item?.TotalCopies ?? 0;
-        publisherInput.SelectedValue = item?.PublisherId ?? 0;
+        dgvBooks.DataSource = controller.GetAll(txtSearch.TextOrNull());
+        ShowCurrent();
+    }
+
+    /// <summary>Cập nhật bản ghi đang chọn và hiển thị lên ô nhập.</summary>
+    private void ShowCurrent()
+    {
+        current = dgvBooks.SelectedRows.Count > 0 ? dgvBooks.SelectedRows[0].DataBoundItem as Book : null;
+        ShowItem(current);
+    }
+
+    /// <summary>Lưu dữ liệu đang nhập rồi tải lại danh sách.</summary>
+    private void Save()
+    {
+        var item = ReadItem();
+        item.Id = current?.Id ?? 0;
+        controller.Save(item);
+        Reload();
+    }
+
+    /// <summary>Xóa bản ghi đang chọn sau khi người dùng xác nhận.</summary>
+    /// <exception cref="BusinessException">Chưa chọn bản ghi.</exception>
+    private void Delete()
+    {
+        if (current is null)
+            throw new BusinessException("Vui lòng chọn dòng cần xóa.");
+
+        var answer = MessageBox.Show(this, "Bạn có chắc muốn xóa dòng này?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        if (answer != DialogResult.Yes)
+            return;
+
+        controller.Delete(current);
+        Reload();
+    }
+
+    /// <summary>Đưa dữ liệu của bản ghi lên các ô nhập.</summary>
+    /// <param name="item">Bản ghi cần hiển thị; <see langword="null"/> để xóa trắng và nhập mới.</param>
+    private void ShowItem(Book? item)
+    {
+        txtTitle.Text = item?.Title;
+        txtIsbn.Text = item?.Isbn;
+        nudPublishedYear.Value = item?.PublishedYear ?? 0;
+        nudTotalCopies.Value = item?.TotalCopies ?? 0;
+        cboPublisher.SelectedValue = item?.PublisherId ?? 0;
 
         if (item is not null)
-            categoryInput.SelectedValue = item.CategoryId;
+            cboCategory.SelectedValue = item.CategoryId;
 
-        for (var i = 0; i < authorsInput.Items.Count; i++)
+        for (var i = 0; i < clbAuthors.Items.Count; i++)
         {
-            var author = (Author)authorsInput.Items[i];
-            authorsInput.SetItemChecked(i, item?.AuthorIds.Contains(author.Id) == true);
+            var author = (Author)clbAuthors.Items[i];
+            clbAuthors.SetItemChecked(i, item?.AuthorIds.Contains(author.Id) == true);
         }
     }
 
-    /// <inheritdoc/>
-    protected override Book ReadItem() => new()
+    /// <summary>Đọc các ô nhập thành model.</summary>
+    /// <returns>Model chứa dữ liệu người dùng nhập.</returns>
+    private Book ReadItem() => new()
     {
-        Title = titleInput.Text.Trim(),
-        Isbn = isbnInput.TextOrNull(),
-        CategoryId = categoryInput.SelectedValue as int? ?? 0,
-        PublisherId = publisherInput.SelectedValue is int and not 0 ? (int)publisherInput.SelectedValue : null,
-        PublishedYear = publishedYearInput.YearOrNull(),
-        TotalCopies = (int)totalCopiesInput.Value,
-        AuthorIds = authorsInput.CheckedItems.Cast<Author>().Select(author => author.Id).ToList()
+        Title = txtTitle.Text.Trim(),
+        Isbn = txtIsbn.TextOrNull(),
+        CategoryId = cboCategory.SelectedValue as int? ?? 0,
+        PublisherId = cboPublisher.SelectedValue is int and not 0 ? (int)cboPublisher.SelectedValue : null,
+        PublishedYear = nudPublishedYear.YearOrNull(),
+        TotalCopies = (int)nudTotalCopies.Value,
+        AuthorIds = clbAuthors.CheckedItems.Cast<Author>().Select(author => author.Id).ToList()
     };
 }

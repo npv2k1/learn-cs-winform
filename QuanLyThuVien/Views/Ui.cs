@@ -27,32 +27,6 @@ internal static class Ui
         }
     }
 
-    /// <summary>Tạo bảng dữ liệu chỉ đọc, chọn theo dòng và tự giãn cột.</summary>
-    /// <returns>Bảng dữ liệu chưa có cột.</returns>
-    public static DataGridView CreateGrid() => new()
-    {
-        Dock = DockStyle.Fill,
-        AutoGenerateColumns = false,
-        ReadOnly = true,
-        AllowUserToAddRows = false,
-        AllowUserToDeleteRows = false,
-        MultiSelect = false,
-        RowHeadersVisible = false,
-        SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-        AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
-    };
-
-    /// <summary>Thêm một cột chữ gắn với thuộc tính của model.</summary>
-    /// <param name="grid">Bảng cần thêm cột.</param>
-    /// <param name="propertyName">Tên thuộc tính của model.</param>
-    /// <param name="header">Tiêu đề cột.</param>
-    public static void AddColumn(this DataGridView grid, string propertyName, string header) =>
-        grid.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            DataPropertyName = propertyName,
-            HeaderText = header
-        });
-
     /// <summary>Lấy nội dung đã bỏ khoảng trắng hai đầu của ô nhập.</summary>
     /// <param name="textBox">Ô nhập.</param>
     /// <returns>Nội dung ô nhập, hoặc <see langword="null"/> nếu ô trống.</returns>
@@ -69,10 +43,6 @@ internal static class Ui
     /// <param name="date">Ngày cần đặt.</param>
     public static void SetDate(this DateTimePicker picker, DateOnly date) =>
         picker.Value = date.ToDateTime(TimeOnly.MinValue);
-
-    /// <summary>Tạo ô nhập năm. Giá trị 0 nghĩa là không có dữ liệu.</summary>
-    /// <returns>Ô nhập năm.</returns>
-    public static NumericUpDown CreateYearInput() => new() { Minimum = 0, Maximum = 9999 };
 
     /// <summary>Đọc giá trị của ô nhập năm.</summary>
     /// <param name="input">Ô nhập năm.</param>

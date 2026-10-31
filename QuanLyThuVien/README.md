@@ -109,7 +109,7 @@ Luồng xử lý: View → Controller → Repository → SQL Server.
 | `Repositories/` | SQL thuần có tham số, thao tác ghi chạy trong transaction |
 | `Data/` | Mở kết nối, đọc giá trị từ `SqlDataReader` |
 
-`Program.cs` khởi tạo các lớp và truyền vào nhau. Các form được dựng bằng code, không dùng Form Designer.
+`Program.cs` khởi tạo các lớp và truyền vào nhau. Mỗi form gồm `X.cs` chứa xử lý sự kiện và `X.Designer.cs` do Form Designer quản lý, nên có thể xem và chỉnh giao diện bằng kéo thả trong Visual Studio.
 
 Quy tắc nghiệp vụ:
 
